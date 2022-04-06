@@ -1,21 +1,17 @@
 <template>
   <div class="home">
     <div id="cesiumContainer"></div>
-    <!-- <div id="eye"></div> -->
-    <div class="eye">
-      <veye :message="viewer"></veye>
-    </div>
+    <div id="eye"></div>
   </div>
 </template>
 
 <script>
-import veye from '@/components/eye/eye.vue';
 export default {
   name: "Home",
   data() {
     return {};
   },
-  components: {veye},
+  components: {},
   mounted() {
     var viewer = new Cesium.Viewer("cesiumContainer", {
       geocoder: false, //一种地理位置搜索工具，用于显示相机访问的地理位置。默认使用微软的Bing地图。
@@ -27,9 +23,17 @@ export default {
       timeline: false, //展示商标版权和数据源。
       fullscreenButton: false, //展示当前时间和允许用户在进度条上拖动到任何一个指定的时间。
       vrButton: false, //视察全屏按钮。
+      selectionIndicator: false,//取消双击锁定，隐藏双击entity时的选中框
+      searchButton:false,
+      scene3DOnly:false,//每个几何实例将只能以3D渲染以节省GPU内存
+      terrainShadows:Cesium.ShadowMode.DISABLED,
+      infoBox:false,//是否显示点击要素之后显示的信息
+      shadows:false,
     });
     this.getClickPointAdd(viewer); //获取当前鼠标点击位置坐标，并添加到图上显示
     viewer._cesiumWidget._creditContainer.style.display = "none"; //版权控件的显示隐藏
+     //去除实体双击 跟踪
+    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     //设置初始位置
     viewer.camera.setView({
       destination: Cesium.Cartesian3.fromDegrees(110.2, 34.55, 20000000),
@@ -38,50 +42,50 @@ export default {
     viewer.baseLayerPicker.viewModel.selectedImagery =
       viewer.baseLayerPicker.viewModel.imageryProviderViewModels[3];
     //鹰眼图
-    // let viewer2 = new Cesium.Viewer("eye", {
-    //   animation: false,
-    //   baseLayerPicker: true,
-    //   fullscreenButton: false,
-    //   geocoder: false,
-    //   homeButton: false,
-    //   sceneModePicker: false,
-    //   selectionIndicator: false,
-    //   timeline: false,
-    //   navigationHelpButton: false,
-    //   infoBox: false,
-    //   navigationInstructionsInitiallyVisible: false,
-    // });
-    // viewer2._cesiumWidget._creditContainer.style.display = "none"; //去掉logo
-    // viewer2.baseLayerPicker.viewModel.selectedImagery =
-    //   viewer2.baseLayerPicker.viewModel.imageryProviderViewModels[3];
+    let viewer2 = new Cesium.Viewer("eye", {
+      animation: false,
+      baseLayerPicker: true,
+      fullscreenButton: false,
+      geocoder: false,
+      homeButton: false,
+      sceneModePicker: false,
+      selectionIndicator: false,
+      timeline: false,
+      navigationHelpButton: false,
+      infoBox: false,
+      navigationInstructionsInitiallyVisible: false,
+    });
+    viewer2._cesiumWidget._creditContainer.style.display = "none"; //去掉logo
+    viewer2.baseLayerPicker.viewModel.selectedImagery =
+      viewer2.baseLayerPicker.viewModel.imageryProviderViewModels[3];
     //设置鹰眼图中球属性
-    // let control = viewer2.scene.screenSpaceCameraController;
-    // control.enableRotate = false;
-    // control.enableTranslate = false;
-    // control.enableZoom = false;
-    // control.enableTilt = false;
-    // control.enableLook = false;
-    // let syncViewer = function () {
-    //   viewer2.camera.flyTo({
-    //     destination: viewer.camera.position,
-    //     orientation: {
-    //       heading: viewer.camera.heading,
-    //       pitch: viewer.camera.pitch,
-    //       roll: viewer.camera.roll,
-    //     },
-    //     duration: 0.0,
-    //   });
-    // };
+    let control = viewer2.scene.screenSpaceCameraController;
+    control.enableRotate = false;
+    control.enableTranslate = false;
+    control.enableZoom = false;
+    control.enableTilt = false;
+    control.enableLook = false;
+    let syncViewer = function () {
+      viewer2.camera.flyTo({
+        destination: viewer.camera.position,
+        orientation: {
+          heading: viewer.camera.heading,
+          pitch: viewer.camera.pitch,
+          roll: viewer.camera.roll,
+        },
+        duration: 0.0,
+      });
+    };
     //同步
-    // viewer.entities.add({
-    //   position: Cesium.Cartesian3.fromDegrees(0, 0),
-    //   label: {
-    //     text: new Cesium.CallbackProperty(function () {
-    //       syncViewer();
-    //       return "";
-    //     }, true),
-    //   },
-    // });
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(0, 0),
+      label: {
+        text: new Cesium.CallbackProperty(function () {
+          syncViewer();
+          return "";
+        }, true),
+      },
+    });
   },
   methods: {
     // 调用
@@ -145,7 +149,7 @@ export default {
       display: none !important;
     }
   }
-  .eye {
+  #eye {
     position: absolute;
     width: 20%;
     height: 20%;
